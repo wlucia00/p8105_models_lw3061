@@ -238,3 +238,5 @@ you can create an anonymous function too using`\(df)` then defining it
 there
 
 ## Binary outcomes
+
+using Wapo homicides data
