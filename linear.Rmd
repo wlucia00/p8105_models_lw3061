@@ -1,0 +1,10 @@
+---
+title: "Linear"
+author: "Lucia Wang"
+date: "2023-11-09"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
