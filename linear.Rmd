@@ -6,5 +6,103 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+library(tidyverse)
+library(p8105.datasets)
+
+set.seed(1)
 ```
+## Linear models
+Import + tidy nyc airbnb data
+```{r}
+data("nyc_airbnb") 
+
+nyc_airbnb = nyc_airbnb |>
+  mutate(stars = review_scores_location / 2) |>
+  select(
+    price, stars, borough=neighbourhood_group, neighbourhood, room_type
+  ) |>
+  filter(borough != "Staten Island")
+```
+
+Let's fit a model
+```{r}
+fit = 
+  nyc_airbnb |>
+  lm(price ~ stars + borough, data= _) # since we piped it in, we use data= _ 
+```
+
+Let's look at it!
+`broom` package has lots of functions for summary or cleaning table
+```{r}
+fit
+
+summary(fit) # matrix
+summary(fit)$coef # look at just coeffs
+coef(fit) # pulls out that table
+# fitted.values(fit) # all the fitted values - big table
+
+fit |> broom::glance()
+fit |> broom::tidy() #gives a tibble
+
+fit |> broom::tidy() |>
+  mutate(term= str_replace(term, "^borough", "Borough: ")) |>
+  select(term, estimate, p.value) |>
+  knitr::kable(digits=3)
+```
+
+## Diagnostics
+you can add residuals or fitted values to the df
+```{r}
+nyc_airbnb |>
+  modelr::add_residuals(fit)
+
+nyc_airbnb |> modelr::add_predictions(fit)
+
+nyc_airbnb |> 
+  modelr::add_residuals(fit) |> 
+  ggplot(aes(x = borough, y = resid)) + geom_violin()
+```
+
+## Anova
+test means between groups
+```{r}
+fit_null = lm(price ~ stars + borough, data = nyc_airbnb)
+fit_alt = lm(price ~ stars + borough + room_type, data = nyc_airbnb)
+
+anova(fit_null, fit_alt) |> 
+  broom::tidy()
+```
+
+what about borough level differences (interaction)
+```{r}
+fit = 
+  nyc_airbnb |>
+  lm(price ~ stars*borough + room_type*borough, data= _)
+```
+
+This works but takes a while/ hard to understand. Instead, nest within the boroughs
+```{r}
+airbnb_lm = function(df) {
+  lm(price ~ stars + room_type, data=df)
+}
+
+nyc_airbnb |>
+  nest(df= -borough) |>
+  mutate(models = map(df, airbnb_lm),
+         results = map(models, broom::tidy))  |>
+  select(borough, results) |>
+  unnest(results) |>
+  select(borough, term, estimate) |>
+  pivot_wider(names_from = term,
+              values_from = estimate) |>
+  knitr::kable(digits=2)
+```
+
+you can create an anonymous function too using`\(df)` then defining it there
+
+## Binary outcomes
+```{r}
+
+```
+
