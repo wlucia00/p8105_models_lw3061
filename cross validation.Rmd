@@ -1,0 +1,22 @@
+---
+title: "cross validation"
+author: "Lucia Wang"
+date: "2023-11-14"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(modelr)
+library(mgcv)
+set.seed(1)
+```
+
+## notes
+model selection is hard 
+* nested models have tests
+* non-nested do not - balance goodness of fit with "complexity" 
+
+
+
